@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robotelemetry-lite"
+version = "1.0.0"
+description = "Telemetría simulada local de un robot móvil con FastAPI, SQLite y Streamlit"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.30,<1",
+    "pydantic>=2.10,<3",
+    "httpx>=0.28,<1",
+    "streamlit>=1.42,<2",
+    "pandas>=2.2,<4",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3,<10", "pytest-cov>=6,<8", "httpx2>=2,<3"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-config --strict-markers"
+
+[tool.coverage.run]
+source = ["robotelemetry"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true

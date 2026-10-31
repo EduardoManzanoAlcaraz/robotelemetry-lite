@@ -1,0 +1,56 @@
+# Entornos y bytecode de Python
+.venv/
+.venv-*/
+venv/
+/.audit/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Datos locales persistentes y archivos auxiliares SQLite
+/data/
+*.sqlite
+*.sqlite3
+*.db
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
+*.db-wal
+*.db-shm
+*.sqlite-journal
+*.sqlite3-journal
+*.db-journal
+
+# Pruebas, cobertura y construcción
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+junit.xml
+build/
+dist/
+.ruff_cache/
+
+# Configuración local y credenciales
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+.pypirc
+.aws/
+.codex/
+.agents/
+*.pem
+*.key
+.vscode/
+.idea/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.log
+*.tmp
+*.bak
