@@ -93,7 +93,7 @@ En `/docs`, prueba `limit=0`, `offset=9223372036854775808` y un filtro temporal 
 
 El smoke check crea otra base temporal y sus propios servidores; no utiliza la demo ni el histórico habitual. Comprueba el flujo HTTP, la persistencia tras reiniciar la API y el dashboard con AppTest. No es una inspección visual de navegador.
 
-Para una presentación, conserva la salida y cita el entorno y la fecha. El informe de verificación diferencia resultados locales de la matriz de GitHub Actions, que todavía no se ha ejecutado remotamente.
+Para una presentación, conserva la salida y cita el entorno y la fecha. El informe de verificación diferencia resultados locales de la [matriz de GitHub Actions ejecutada correctamente](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/actions/runs/41203513698): Windows y Ubuntu con Python 3.12 y 3.14.
 
 ## Revisión visual pendiente de varios días
 

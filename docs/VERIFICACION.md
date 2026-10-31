@@ -1,6 +1,6 @@
 # Verificación de RoboTelemetry Lite v1.0.0
 
-Revisión de cierre realizada el **31 de octubre de 2026**, en Windows. Este informe distingue ejecuciones reales, revisión del código y comprobaciones pendientes. No se ha publicado un repositorio, etiqueta ni release en GitHub.
+Revisión de cierre realizada el **31 de octubre de 2026**. El registro de pruebas locales en Windows se obtuvo antes de la publicación. La sección [Publicación y ejecución real de GitHub Actions](#publicación-y-ejecución-real-de-github-actions) documenta la publicación posterior del código y la CI remota, diferenciadas de esos resultados locales.
 
 ## Resultados ejecutados
 
@@ -16,7 +16,7 @@ Revisión de cierre realizada el **31 de octubre de 2026**, en Windows. Este inf
 | Workflow con actionlint 1.7.12 | Windows local | Salida 0, sin errores. No es una ejecución de GitHub Actions. |
 | Construcción wheel PEP 517 | Python 3.12.10, copia aislada de fuentes | Correcta; metadatos 1.0.0 e inspección del contenido sin bases, entornos ni secretos locales. |
 
-Los tiempos incluyen la carga de las dependencias de cada ejecución; no son una prueba de rendimiento ni una garantía de latencia. No se ha probado Linux localmente ni la matriz remota de CI.
+Los tiempos incluyen la carga de las dependencias de cada ejecución; no son una prueba de rendimiento ni una garantía de latencia. Esta tabla corresponde a Windows local; Ubuntu y la matriz remota se verificaron después mediante GitHub Actions, como se recoge más abajo.
 
 ## Instalación limpia y versiones
 
@@ -125,12 +125,26 @@ La versión 1.0.0 está en `pyproject.toml`, módulo y OpenAPI. Se construyó un
 
 Se probaron patrones de `.gitignore` con Git en un repositorio aislado, sin inicializar la raíz del proyecto. Bases, auxiliares SQLite, entornos, `.audit`, credenciales habituales, temporales y artefactos quedan excluidos. Un escaneo heurístico de los archivos publicables no detectó tokens, claves privadas ni secretos literales; no equivale a una garantía completa ni a un análisis de vulnerabilidades.
 
-El workflow mantiene cuatro combinaciones Windows/Ubuntu × Python 3.12/3.14, permisos `contents: read`, caché de pip y timeout. Se añadieron `pip check` y smoke check a pytest con cobertura. Se validó con [actionlint 1.7.12](https://github.com/rhysd/actionlint/releases/tag/v1.7.12), salida 0. **No hay resultados remotos de GitHub Actions y no se ha publicado nada.**
+El workflow mantiene cuatro combinaciones Windows/Ubuntu × Python 3.12/3.14, permisos `contents: read`, caché de pip y timeout. Se añadieron `pip check` y smoke check a pytest con cobertura. En la preparación local se validó con [actionlint 1.7.12](https://github.com/rhysd/actionlint/releases/tag/v1.7.12), salida 0; en ese momento todavía no se había publicado el código ni ejecutado CI remota.
+
+## Publicación y ejecución real de GitHub Actions
+
+El **31 de octubre de 2026** se publicó el repositorio público [EduardoManzanoAlcaraz/robotelemetry-lite](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite), con `main` como rama principal. La [ejecución 41203513698](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/actions/runs/41203513698) comprobó el commit [`c96bb3bd5e827978d5e55f9b7855a859d630924f`](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/commit/c96bb3bd5e827978d5e55f9b7855a859d630924f) y terminó con las **cuatro combinaciones correctas**.
+
+| Runner | Python observado en el log | pytest | Resultado de pytest | Cobertura con ramas |
+| --- | --- | --- | --- | --- |
+| Ubuntu | 3.12.15 | 9.2.0 | 161 passed in 6.83s | 94 % |
+| Ubuntu | 3.14.9 | 9.2.0 | 161 passed in 6.16s | 94 % |
+| Windows | 3.12.10 | 9.2.0 | 161 passed in 23.75s | 94 % |
+| Windows | 3.14.9 | 9.2.0 | 161 passed in 36.38s | 94 % |
+
+En los cuatro jobs, `pip check` indicó `No broken requirements found.` y el smoke check terminó correctamente: 80 lecturas, 34 incidencias de las tres reglas, persistencia tras reiniciar la API, cuatro métricas, cuatro gráficas y salud HTTP 200 de Streamlit. Son resultados remotos reales, contrastados con sus logs, distintos de las ejecuciones locales anteriores. Las versiones se resolvieron dentro de los rangos declarados; no se suman las coberturas de los cuatro jobs.
+
+La CI ejecuta el dashboard mediante AppTest y no completa la inspección visual pendiente del eje de varios días en un navegador.
 
 ## Pendientes explícitos
 
 - Inspección visual final de los ejes de varios días y controles en un navegador accesible. El cambio está probado a nivel de datos y especificación.
-- Ejecución real de la matriz de GitHub Actions, incluido Ubuntu, tras una publicación autorizada.
 - No se ha realizado una auditoría específica de CVE, carga sostenida, dispositivos móviles ni producción.
 - Continúan las limitaciones del README: autenticación ausente para exposición pública, ausencia de retención/migraciones/copias automáticas y consultas de un refresco sin instantánea transaccional compartida.
 

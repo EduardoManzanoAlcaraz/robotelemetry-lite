@@ -2,7 +2,7 @@
 
 ## 1.0.0 — 2026-10-31
 
-Versión preparada localmente para portfolio. No se ha publicado una etiqueta, release ni repositorio en GitHub.
+Código de la versión publicado en [EduardoManzanoAlcaraz/robotelemetry-lite](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite), con `main` como rama principal.
 
 ### Incluido
 
@@ -27,4 +27,6 @@ Versión preparada localmente para portfolio. No se ha publicado una etiqueta, r
 
 Las correcciones disponen de regresiones automatizadas. Los resultados de pytest, cobertura, instalación limpia e integración realmente ejecutados se registran en [docs/VERIFICACION.md](docs/VERIFICACION.md).
 
-Las capturas incluidas son reales, tomadas el 26 de octubre de 2026. La revisión visual final del caso de varios días sigue pendiente por indisponibilidad del navegador de automatización. La matriz remota de GitHub Actions tampoco se ha ejecutado. No se implementa integración ABB ni AWS, ni se distribuyen bases de datos o históricos locales.
+La [primera ejecución de GitHub Actions](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/actions/runs/41203513698) completó las cuatro combinaciones Windows/Ubuntu × Python 3.12/3.14: 161 pruebas, 94 % de cobertura, `pip check` y smoke check correctos en cada una.
+
+Las capturas incluidas son reales, tomadas el 26 de octubre de 2026. La revisión visual final del caso de varios días sigue pendiente por indisponibilidad del navegador de automatización. No se implementa integración ABB ni AWS, ni se distribuyen bases de datos o históricos locales.

@@ -4,7 +4,7 @@
 
 > Telemetría simulada de un robot móvil en Python: escenarios reproducibles, persistencia transaccional SQLite, API FastAPI, dashboard Streamlit y pruebas automatizadas. Ejecución local sin hardware ni servicios de pago.
 
-No se ha publicado el repositorio ni una release. La versión 1.0.0 está preparada localmente. Antes de publicar, revisa los archivos incluidos: no deben contener bases de datos locales, entornos virtuales, exportaciones personales ni credenciales.
+El código de la versión 1.0.0 está publicado en [EduardoManzanoAlcaraz/robotelemetry-lite](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite). Los archivos publicados se revisaron para excluir bases de datos locales, entornos virtuales, exportaciones personales y credenciales.
 
 ## Afirmaciones verificables
 
@@ -19,13 +19,13 @@ No se ha publicado el repositorio ni una release. La versión 1.0.0 está prepar
 | Normalicé fechas ISO con distintas precisiones y zonas horarias. | Regresiones que verifican datos de las cuatro gráficas en UTC. |
 | Preparé una demo que rechaza bases existentes en lugar de sobrescribirlas. | `scripts/prepare_demo.py`, creación exclusiva y pruebas de protección. |
 | Probé el flujo completo con procesos locales y HTTP reales. | `scripts/smoke_check.py` y resultados en `VERIFICACION.md`. |
-| Preparé CI para Windows y Ubuntu con Python 3.12 y 3.14. | `.github/workflows/tests.yml`; la ejecución remota sigue pendiente. |
+| Ejecuté CI para Windows y Ubuntu con Python 3.12 y 3.14. | [Cuatro combinaciones correctas en GitHub Actions](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/actions/runs/41203513698), con pytest, cobertura, `pip check` y smoke check. |
 
 Las cifras de pruebas, cobertura y versiones deben proceder de [VERIFICACION.md](VERIFICACION.md). Indica su entorno y fecha; no conviertas un resultado local en una afirmación de CI, producción o uso real.
 
 ## Texto breve para LinkedIn
 
-> He preparado RoboTelemetry Lite v1.0.0 como proyecto de portfolio en Python. Simula batería, temperatura, velocidad y distancia a obstáculos de un robot móvil, guarda las lecturas y alertas en SQLite y las presenta mediante FastAPI y Streamlit.
+> He publicado el código de RoboTelemetry Lite v1.0.0 como proyecto de portfolio en Python. Simula batería, temperatura, velocidad y distancia a obstáculos de un robot móvil, guarda las lecturas y alertas en SQLite y las presenta mediante FastAPI y Streamlit.
 >
 > Me he centrado en separar responsabilidades, validar los datos y comprobar el flujo completo. Durante la revisión corregí casos de paginación, tiempos de adquisición acelerada y tratamiento de fechas, añadiendo pruebas de regresión.
 >
@@ -33,7 +33,7 @@ Las cifras de pruebas, cobertura y versiones deben proceder de [VERIFICACION.md]
 >
 > El repositorio documenta la instalación, las decisiones técnicas, las pruebas realmente ejecutadas y sus limitaciones.
 
-Añade el enlace cuando autorices y realices la publicación. Si incluyes métricas, toma las cifras finales del informe de verificación. No atribuyas al proyecto experiencia con ABB, AWS, usuarios reales o garantías de producción.
+Repositorio: [EduardoManzanoAlcaraz/robotelemetry-lite](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite). Si incluyes métricas, toma las cifras finales del informe de verificación y distingue resultados locales de CI. No atribuyas al proyecto experiencia con ABB, AWS, usuarios reales o garantías de producción.
 
 ## Explicación para una entrevista
 

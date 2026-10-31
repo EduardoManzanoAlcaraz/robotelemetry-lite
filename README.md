@@ -210,7 +210,7 @@ La suite prueba simulador, validación, reglas, persistencia, endpoints, dashboa
 
 Los resultados realmente ejecutados, la cobertura y el estado de la instalación limpia están en [docs/VERIFICACION.md](docs/VERIFICACION.md). Ese documento distingue evidencia local, comprobación visual anterior y revisiones pendientes; no atribuye resultados locales a GitHub Actions.
 
-El [workflow](.github/workflows/tests.yml) instala el proyecto, ejecuta `pip check`, pytest con cobertura y el smoke check en Windows y Ubuntu, con Python 3.12 y 3.14. Se ha revisado localmente con actionlint; la matriz **no se ha ejecutado en GitHub**. Consulta el estado exacto en el informe de verificación.
+El [workflow](.github/workflows/tests.yml) instala el proyecto, ejecuta `pip check`, pytest con cobertura y el smoke check en Windows y Ubuntu, con Python 3.12 y 3.14. La [primera ejecución real en GitHub Actions](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/actions/runs/41203513698) terminó con **las cuatro combinaciones correctas**, 161 pruebas y 94 % de cobertura en cada una. Consulta las versiones y el alcance en el informe de verificación.
 
 ## Organización del código
 
@@ -241,8 +241,8 @@ El [workflow](.github/workflows/tests.yml) instala el proyecto, ejecuta `pip che
 - `/health` no acredita la salud del productor. La interfaz muestra la antigüedad de las lecturas.
 - Las consultas HTTP que componen cada refresco no comparten una transacción de snapshot; con generación en curso puede haber pequeñas diferencias temporales entre contadores, última lectura e histórico.
 - La revisión visual final de ejes de varios días quedó pendiente por indisponibilidad del navegador de automatización. La especificación y los datos de las cuatro gráficas sí disponen de regresiones automatizadas.
-- No se ha ejecutado la matriz remota de GitHub Actions ni una auditoría específica de vulnerabilidades de dependencias. Las versiones comprobadas localmente constan en el informe de verificación.
+- No se ha realizado una auditoría específica de vulnerabilidades de dependencias. Las versiones comprobadas localmente y en GitHub Actions constan en el informe de verificación.
 
 `.gitignore` excluye bases SQLite y auxiliares, `data/`, entornos virtuales, resultados de prueba, temporales y configuración sensible habitual. No es un detector de secretos: revisa siempre los archivos que vayas a añadir. Las capturas incluidas proceden de datos simulados de demostración; **no se distribuyen bases de datos ni históricos locales**.
 
-La versión del código es **1.0.0**, preparada localmente; no se ha publicado un repositorio, una etiqueta ni una release. Cambios en [CHANGELOG.md](CHANGELOG.md). Para presentar el proyecto con afirmaciones verificables, consulta [docs/PORTFOLIO.md](docs/PORTFOLIO.md).
+El código de la versión **1.0.0** está publicado en [EduardoManzanoAlcaraz/robotelemetry-lite](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite), con `main` como rama principal. El historial de publicaciones se consulta en [Releases](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/releases). Cambios en [CHANGELOG.md](CHANGELOG.md). Para presentar el proyecto con afirmaciones verificables, consulta [docs/PORTFOLIO.md](docs/PORTFOLIO.md).
