@@ -1,6 +1,42 @@
 # Verificación de RoboTelemetry Lite v1.0.0
 
-Revisión de cierre realizada el **31 de octubre de 2026**. El registro de pruebas locales en Windows se obtuvo antes de la publicación. La sección [Publicación y ejecución real de GitHub Actions](#publicación-y-ejecución-real-de-github-actions) documenta la publicación posterior del código y la CI remota, diferenciadas de esos resultados locales.
+Este documento distingue el estado de `main` tras ampliar las pruebas y el registro histórico de la release `v1.0.0`. El tag y la release originales no se modifican: sus 161 pruebas y 94 % corresponden a la versión publicada el 31 de octubre de 2026.
+
+## Main: ampliación de pruebas — 2 de noviembre de 2026
+
+Se añadieron **26 casos netos**, hasta 187, en `test_simulator.py`, `test_dashboard.py` y `test_storage.py`. No cambian el código productivo, la configuración de cobertura ni las dependencias.
+
+Últimas ejecuciones locales antes de publicar esta ampliación:
+
+| Entorno Windows | Resultado real | Sentencias | Ramas | Cobertura combinada |
+| --- | --- | --- | --- | --- |
+| Python 3.14.7 | **187 passed in 13.51s**, salida 0, sin avisos | 485/487, 99,59 % | 84/86, 97,67 % | **99,30 %** |
+| Python 3.12.10 | **187 passed in 23.80s**, salida 0, sin avisos | 497/499, 99,60 % | 84/86, 97,67 % | **99,32 %** |
+
+Pytest-cov redondea ambos totales a **99 %**. Cada intérprete conserva su propio denominador; no se mezclan ni se suman sus coberturas. En Python 3.14 se mantuvieron las mismas 487 sentencias y 86 ramas medidas que en la auditoría inicial; en ambos entornos hay **cero líneas excluidas**. La mejora viene de ejecutar comportamientos antes sin instrumentar, no de omitir código.
+
+| Módulo | Cobertura combinada actual, redondeada | Líneas sin cubrir |
+| --- | --- | --- |
+| `simulator.py` | 98 % | 140 |
+| `dashboard.py` | 99 % | 313 |
+| `storage.py` | 100 % | Ninguna |
+
+Las dos líneas restantes invocan `main()` bajo `if __name__ == '__main__'` y siguen incluidas en la medición. Las funciones principales se prueban mediante los puntos de entrada documentados; el smoke check ejecuta el simulador en un subproceso, cuya cobertura no se añade a pytest. No se añaden casos exclusivamente para alcanzar el 100 %; una cobertura alta no demuestra que todos los fallos o cargas posibles estén probados.
+
+Los casos nuevos cubren:
+
+- CLI real con `argparse`, configuración y SQLite temporal; argumentos y entorno inválidos, errores reales de base y archivos, e interrupción controlada tras cuatro escrituras confirmadas.
+- Fechas sin offset, rangos invertidos y límites UTC equivalentes con microsegundos; rollback y cierre de conexiones reales, retenidas para que la recolección de basura no oculte fugas.
+- JSON válido con estructura incorrecta, campos o valores inválidos y error visible sin traceback ni exportación engañosa en AppTest.
+- Cuatro gráficas con una o dos ejecuciones en ventanas de 59 segundos, seis horas, justo antes de 24 horas, exactamente 24 horas y cuatro días, verificando datos Arrow y escalas UTC.
+
+La auditoría automatizada del 2 de noviembre también comprobó API real y AppTest con ventanas de seis horas y cuatro días, filtros, tres alertas activas, controles y contenido CSV de 60/180 filas. **No fue una inspección visual de Chrome ni una descarga de CSV en el navegador.** La inspección visual de horas/días, controles y descarga sigue pendiente hasta confirmación manual del propietario; los bloqueos de Computer Use no se presentan como una comprobación visual completada.
+
+Estas cifras son locales. El [estado remoto actual de `main`](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/actions/workflows/tests.yml?query=branch%3Amain) debe consultarse en la ejecución del commit correspondiente. La CI histórica de 161 pruebas registrada a continuación no acredita la ampliación de 187 antes de ejecutarla.
+
+## Registro histórico de v1.0.0
+
+Revisión de cierre realizada el **31 de octubre de 2026**. Los apartados siguientes conservan los resultados originales. El registro de pruebas locales en Windows se obtuvo antes de la publicación. La sección [Publicación y ejecución real de GitHub Actions](#publicación-y-ejecución-real-de-github-actions) documenta la publicación posterior del código y la CI remota de aquella versión, diferenciadas de esos resultados locales.
 
 ## Resultados ejecutados
 

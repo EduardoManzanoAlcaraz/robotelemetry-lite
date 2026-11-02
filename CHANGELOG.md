@@ -1,5 +1,12 @@
 ﻿# Historial de cambios
 
+## Sin nueva release · main — 2026-11-02
+
+- Ampliación de 161 a 187 pruebas, sin cambios de código productivo: CLI, errores reales de SQLite y archivos, interrupción tras escrituras confirmadas, fechas, conexiones, contratos HTTP y ventanas temporales.
+- Cobertura combinada local de 99,30 % en Python 3.14.7: 485/487 sentencias y 84/86 ramas, sin exclusiones añadidas. Las líneas pendientes son invocaciones de los guardas `__main__`.
+- Documentación que distingue pruebas automatizadas, resultados locales y CI. La inspección visual en Chrome y la descarga CSV siguen pendientes de confirmación manual.
+- El tag y la release `v1.0.0` originales se conservan sin modificaciones. Sus resultados de 161 pruebas y 94 % corresponden a aquella versión; esta actualización no crea una release nueva.
+
 ## 1.0.0 — 2026-10-31
 
 Código de la versión publicado en [EduardoManzanoAlcaraz/robotelemetry-lite](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite), con `main` como rama principal.

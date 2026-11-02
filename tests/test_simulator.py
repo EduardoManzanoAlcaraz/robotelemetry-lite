@@ -1,4 +1,7 @@
 from datetime import UTC, datetime, timedelta
+import logging
+import sqlite3
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -8,6 +11,23 @@ from robotelemetry.config import AlertThresholds
 from robotelemetry.models import AlertKind, Scenario
 from robotelemetry.simulator import RobotSimulator, run_simulation
 import robotelemetry.simulator as simulator_module
+from robotelemetry.storage import SQLiteStore
+
+
+@pytest.fixture
+def cli_database(tmp_path, monkeypatch):
+    """La CLI real usa exclusivamente una ruta y umbrales controlados por el test."""
+    database = tmp_path / "cli.sqlite3"
+    monkeypatch.setenv("ROBO_DB_PATH", str(database))
+    monkeypatch.setenv("ROBO_BATTERY_LOW_PCT", "20")
+    monkeypatch.setenv("ROBO_TEMPERATURE_HIGH_C", "65")
+    monkeypatch.setenv("ROBO_OBSTACLE_NEAR_M", "0.5")
+    return database
+
+
+def invoke_cli(monkeypatch, *arguments):
+    monkeypatch.setattr(sys, "argv", ["robotelemetry.simulator", *arguments])
+    return simulator_module.main()
 
 
 @pytest.fixture
@@ -204,3 +224,107 @@ def test_invalid_runner_options_fail_before_any_measurement_is_written(store, op
     with pytest.raises(ValueError):
         run_simulation(store, AlertThresholds(), **options)
     assert store.counts() == {"measurements": 0, "alerts": 0}
+
+
+def test_simulator_rejects_start_time_without_timezone():
+    with pytest.raises(ValueError, match="start_time debe incluir zona horaria"):
+        RobotSimulator(start_time=datetime(2026, 1, 1))
+
+
+def test_cli_parses_options_and_persists_demo_to_configured_database(
+    cli_database, monkeypatch, caplog
+):
+    with caplog.at_level(logging.INFO, logger="robotelemetry.simulator"):
+        exit_code = invoke_cli(
+            monkeypatch, "--seed", "42", "--scenario", "demo", "--samples", "80", "--interval", "0"
+        )
+    assert exit_code == 0
+    persisted = SQLiteStore(cli_database)
+    assert persisted.counts() == {"measurements": 80, "alerts": 34}
+    assert {reading.scenario for reading in persisted.history()} == {Scenario.DEMO}
+    assert {reading.seed for reading in persisted.history()} == {42}
+    assert {alert.kind for alert in persisted.alerts()} == set(AlertKind)
+    assert "Sensores SIMULADOS" in caplog.text
+    assert "Fin: 80 lecturas guardadas." in caplog.text
+
+
+def test_cli_invalid_argument_reports_usage_without_creating_database(
+    cli_database, monkeypatch, capsys
+):
+    with pytest.raises(SystemExit) as error:
+        invoke_cli(monkeypatch, "--scenario", "unsupported-scenario")
+    assert error.value.code == 2
+    assert "usage:" in capsys.readouterr().err
+    assert not cli_database.exists()
+
+
+def test_cli_invalid_runner_option_returns_argument_error_without_creating_database(
+    cli_database, monkeypatch, capsys
+):
+    with pytest.raises(SystemExit) as error:
+        invoke_cli(monkeypatch, "--samples", "0", "--interval", "0")
+    assert error.value.code == 2
+    assert "samples debe ser >= 1" in capsys.readouterr().err
+    assert not cli_database.exists()
+
+
+def test_cli_invalid_environment_returns_argument_error_without_creating_database(
+    cli_database, monkeypatch, capsys
+):
+    monkeypatch.setenv("ROBO_BATTERY_LOW_PCT", "101")
+    with pytest.raises(SystemExit) as error:
+        invoke_cli(monkeypatch, "--samples", "1", "--interval", "0")
+    assert error.value.code == 2
+    assert "battery_low_pct" in capsys.readouterr().err
+    assert not cli_database.exists()
+
+
+def test_cli_database_open_error_returns_failure_and_preserves_existing_path(
+    cli_database, monkeypatch, caplog
+):
+    cli_database.mkdir()
+    sentinel = cli_database / "keep.txt"
+    sentinel.write_text("existing data", encoding="utf-8")
+    exit_code = invoke_cli(monkeypatch, "--samples", "1", "--interval", "0")
+    assert exit_code == 1
+    assert sentinel.read_text(encoding="utf-8") == "existing data"
+    assert any(record.exc_info and isinstance(record.exc_info[1], sqlite3.Error)
+               for record in caplog.records)
+    assert "No se pudo escribir en SQLite" in caplog.text
+
+
+def test_cli_filesystem_error_returns_failure_and_preserves_existing_file(
+    cli_database, monkeypatch, caplog
+):
+    blocked_parent = cli_database.parent / "existing-file"
+    blocked_parent.write_bytes(b"preserve")
+    monkeypatch.setenv("ROBO_DB_PATH", str(blocked_parent / "telemetry.sqlite3"))
+    exit_code = invoke_cli(monkeypatch, "--samples", "1", "--interval", "0")
+    assert exit_code == 1
+    assert blocked_parent.read_bytes() == b"preserve"
+    assert any(record.exc_info and isinstance(record.exc_info[1], OSError)
+               for record in caplog.records)
+    assert "No se pudo escribir en SQLite" in caplog.text
+
+
+def test_cli_interruption_keeps_committed_readings_and_exits_cleanly(
+    cli_database, monkeypatch, acquisition_clock, caplog
+):
+    record = SQLiteStore.record
+
+    def interrupt_after_commit(store, sample, alerts):
+        saved = record(store, sample, alerts)
+        if sample.sequence == 4:
+            raise KeyboardInterrupt
+        return saved
+
+    # Interrumpir en un punto conocido conserva simulación, servicio y SQL reales.
+    monkeypatch.setattr(SQLiteStore, "record", interrupt_after_commit)
+    with caplog.at_level(logging.INFO, logger="robotelemetry.simulator"):
+        exit_code = invoke_cli(monkeypatch, "--scenario", "low_battery", "--interval", "0.1")
+    assert exit_code == 0
+    persisted = SQLiteStore(cli_database)
+    assert persisted.counts()["measurements"] == 4
+    assert [reading.sequence for reading in reversed(persisted.history())] == [1, 2, 3, 4]
+    assert "Simulación detenida. Las lecturas confirmadas permanecen en SQLite." in caplog.text
+    assert "Fin:" not in caplog.text

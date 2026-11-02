@@ -1,6 +1,6 @@
 import sqlite3
 from contextlib import closing
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta, timezone, tzinfo
 
 import pytest
 
@@ -57,7 +57,18 @@ def test_duplicate_run_and_sequence_are_rejected_without_partial_write(
     assert store.counts() == {"measurements": 1, "alerts": 1}
 
 
-def test_invalid_alert_rolls_back_its_measurement(store, sample_factory):
+def test_invalid_alert_rolls_back_its_measurement_and_closes_connections(
+    store, sample_factory, monkeypatch
+):
+    opened_connections = []
+    original_connect = sqlite3.connect
+
+    def track_connection(*args, **kwargs):
+        connection = original_connect(*args, **kwargs)
+        opened_connections.append(connection)
+        return connection
+
+    monkeypatch.setattr(sqlite3, "connect", track_connection)
     sample = sample_factory()
     # Bypass the model solely to exercise the database constraint and rollback.
     invalid_alert = AlertDraft.model_construct(
@@ -71,6 +82,12 @@ def test_invalid_alert_rolls_back_its_measurement(store, sample_factory):
     with pytest.raises(sqlite3.IntegrityError):
         store.record(sample, [invalid_alert])
     assert store.counts() == {"measurements": 0, "alerts": 0}
+    # Keep strong references so garbage collection cannot hide leaked handles.
+    # Both the failed transaction and the successful count query must close.
+    assert opened_connections
+    for connection in opened_connections:
+        with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+            connection.execute("SELECT 1")
 
 
 def test_latest_uses_measurement_time_instead_of_insertion_order(
@@ -119,6 +136,47 @@ def test_history_date_filters_are_inclusive(store, sample_factory):
         since=start + timedelta(seconds=1), until=start + timedelta(seconds=3)
     )
     assert [sample.sequence for sample in history] == [4, 3, 2]
+
+
+class UndefinedOffset(tzinfo):
+    """A tzinfo can still be naive when its UTC offset is undefined."""
+
+    def utcoffset(self, value):
+        return None
+
+
+@pytest.mark.parametrize(("parameter", "timestamp"), [
+    ("since", datetime(2026, 1, 1)),
+    ("until", datetime(2026, 1, 1, tzinfo=UndefinedOffset())),
+])
+def test_history_rejects_dates_without_utc_offset_before_opening_database(
+    tmp_path, parameter, timestamp
+):
+    path = tmp_path / "not-created" / "telemetry.sqlite3"
+    database = SQLiteStore(path)
+    with pytest.raises(ValueError, match="zona horaria"):
+        database.history(**{parameter: timestamp})
+    assert not path.parent.exists()
+
+
+def test_history_rejects_reversed_utc_range_before_opening_database(tmp_path):
+    path = tmp_path / "not-created" / "telemetry.sqlite3"
+    database = SQLiteStore(path)
+    since = datetime(2026, 1, 1, 1, tzinfo=timezone(timedelta(hours=1)))
+    until = datetime(2025, 12, 31, 19, 59, 59, tzinfo=timezone(timedelta(hours=-4)))
+    with pytest.raises(ValueError, match="since debe ser anterior o igual a until"):
+        database.history(since=since, until=until)
+    assert not path.parent.exists()
+
+
+def test_history_equal_bounds_in_different_timezones_select_same_instant(
+    store, sample_factory
+):
+    timestamp = datetime(2026, 1, 1, microsecond=123456, tzinfo=UTC)
+    record = store.record(sample_factory(timestamp=timestamp), [])
+    since = timestamp.astimezone(timezone(timedelta(hours=5, minutes=30)))
+    until = timestamp.astimezone(timezone(timedelta(hours=-4)))
+    assert store.history(since=since, until=until) == [record]
 
 
 def test_alert_history_can_be_filtered_and_paginated(store, sample_factory):

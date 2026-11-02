@@ -4,6 +4,8 @@ Telemetría **simulada** de un robot móvil: generación reproducible en Python,
 
 **Los sensores son simulados. No existe conexión con un robot físico, ABB RobotStudio ni AWS.** La aplicación no necesita cuentas externas ni servicios de pago.
 
+**Documentación de `main`.** La [release v1.0.0](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/releases/tag/v1.0.0) conserva su código y registro original de 161 pruebas y 94 % de cobertura. `main` amplía la suite a **187 pruebas**, con **99,30 % de cobertura combinada** en Windows con Python 3.14.7; no modifica el código de producción ni mueve aquel tag.
+
 ![Estado actual, métricas y alertas de RoboTelemetry Lite](docs/assets/dashboard-estado.jpg)
 
 Captura real del frontend tomada el 26 de octubre de 2026. [Ver las incidencias y la exportación](docs/assets/dashboard-historico.jpg).
@@ -204,13 +206,15 @@ Invoke-RestMethod 'http://127.0.0.1:8000/telemetry/history?since=2026-10-31T00:0
 .\.venv\Scripts\python.exe -m pip check
 ```
 
-La suite prueba simulador, validación, reglas, persistencia, endpoints, dashboard y protección de datos de la herramienta de demo. Incluye regresiones de paginación, adquisición acelerada, fechas ISO mixtas, normalización de fechas extremas y ejes UTC en ventanas cortas y de varios días. Las pruebas utilizan bases temporales y dobles HTTP donde procede.
+La suite prueba simulador, validación, reglas, persistencia, endpoints, dashboard y protección de datos de la herramienta de demo. Incluye regresiones de paginación, adquisición acelerada, fechas ISO mixtas, normalización de fechas extremas y ejes UTC en ventanas cortas y de varios días. También comprueba errores reales de la CLI y del almacenamiento, conservación de lecturas tras una interrupción, cierre de conexiones y respuestas HTTP con datos inválidos. Las pruebas utilizan bases temporales y dobles HTTP donde procede.
+
+**Verificación local de `main`, 2 de noviembre de 2026:** 187 pruebas correctas en Python 3.14.7; 485/487 sentencias (**99,59 %**) y 84/86 ramas (**97,67 %**), con **99,30 % combinado**, mostrado como 99 % por pytest-cov. No se añadieron exclusiones ni se cambió el denominador para elevar la cifra. Detalle, compatibilidad con Python 3.12 y límites en [VERIFICACION.md](docs/VERIFICACION.md).
 
 `smoke_check.py` utiliza SQLite temporal y puertos libres: ejecuta la CLI, arranca FastAPI y Streamlit, consulta HTTP, reinicia la API para comprobar persistencia y ejecuta el dashboard con AppTest contra la API real. Comprueba cuatro métricas y cuatro gráficas; después detiene sus propios procesos. El HTTP de Streamlit verifica el arranque del servidor; AppTest verifica la ejecución de la interfaz. **No sustituye una inspección visual de navegador.**
 
 Los resultados realmente ejecutados, la cobertura y el estado de la instalación limpia están en [docs/VERIFICACION.md](docs/VERIFICACION.md). Ese documento distingue evidencia local, comprobación visual anterior y revisiones pendientes; no atribuye resultados locales a GitHub Actions.
 
-El [workflow](.github/workflows/tests.yml) instala el proyecto, ejecuta `pip check`, pytest con cobertura y el smoke check en Windows y Ubuntu, con Python 3.12 y 3.14. La [primera ejecución real en GitHub Actions](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/actions/runs/41203513698) terminó con **las cuatro combinaciones correctas**, 161 pruebas y 94 % de cobertura en cada una. Consulta las versiones y el alcance en el informe de verificación.
+El [workflow](.github/workflows/tests.yml) instala el proyecto, ejecuta `pip check`, pytest con cobertura y el smoke check en Windows y Ubuntu, con Python 3.12 y 3.14. Consulta las [ejecuciones actuales de `main`](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/actions/workflows/tests.yml?query=branch%3Amain) para su estado remoto; los resultados locales no se atribuyen a CI. Como registro histórico, la [primera ejecución real](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/actions/runs/41203513698) completó las cuatro combinaciones con 161 pruebas y 94 % de cobertura antes de ampliar la suite.
 
 ## Organización del código
 
@@ -240,7 +244,7 @@ El [workflow](.github/workflows/tests.yml) instala el proyecto, ejecuta `pip che
 - No hay retención, migraciones ni copias de seguridad automáticas; el histórico crece mientras se genera telemetría.
 - `/health` no acredita la salud del productor. La interfaz muestra la antigüedad de las lecturas.
 - Las consultas HTTP que componen cada refresco no comparten una transacción de snapshot; con generación en curso puede haber pequeñas diferencias temporales entre contadores, última lectura e histórico.
-- La revisión visual final de ejes de varios días quedó pendiente por indisponibilidad del navegador de automatización. La especificación y los datos de las cuatro gráficas sí disponen de regresiones automatizadas.
+- La inspección visual en Chrome de ejes de horas y días, controles y descarga CSV sigue pendiente de confirmación manual del propietario. AppTest y Arrow comprueban datos y especificaciones; el CSV generado se valida por su contenido, sin acreditar la descarga ni el dibujo en el navegador.
 - No se ha realizado una auditoría específica de vulnerabilidades de dependencias. Las versiones comprobadas localmente y en GitHub Actions constan en el informe de verificación.
 
 `.gitignore` excluye bases SQLite y auxiliares, `data/`, entornos virtuales, resultados de prueba, temporales y configuración sensible habitual. No es un detector de secretos: revisa siempre los archivos que vayas a añadir. Las capturas incluidas proceden de datos simulados de demostración; **no se distribuyen bases de datos ni históricos locales**.

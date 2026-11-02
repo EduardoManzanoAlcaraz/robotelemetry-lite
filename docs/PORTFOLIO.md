@@ -6,6 +6,8 @@
 
 El código de la versión 1.0.0 está publicado en [EduardoManzanoAlcaraz/robotelemetry-lite](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite). Los archivos publicados se revisaron para excluir bases de datos locales, entornos virtuales, exportaciones personales y credenciales.
 
+La ampliación de pruebas de `main` se documenta por separado de la release original: **187 pruebas correctas y 99,30 % de cobertura combinada local con Python 3.14.7**, frente a las 161 y 94 % del registro de `v1.0.0`. No se ha cambiado el código productivo ni se ha movido el tag. Antes de citar resultados remotos de `main`, consulta la [ejecución correspondiente de GitHub Actions](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/actions/workflows/tests.yml?query=branch%3Amain).
+
 ## Afirmaciones verificables
 
 | Afirmación defendible | Evidencia |
@@ -19,7 +21,7 @@ El código de la versión 1.0.0 está publicado en [EduardoManzanoAlcaraz/robote
 | Normalicé fechas ISO con distintas precisiones y zonas horarias. | Regresiones que verifican datos de las cuatro gráficas en UTC. |
 | Preparé una demo que rechaza bases existentes en lugar de sobrescribirlas. | `scripts/prepare_demo.py`, creación exclusiva y pruebas de protección. |
 | Probé el flujo completo con procesos locales y HTTP reales. | `scripts/smoke_check.py` y resultados en `VERIFICACION.md`. |
-| Ejecuté CI para Windows y Ubuntu con Python 3.12 y 3.14. | [Cuatro combinaciones correctas en GitHub Actions](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/actions/runs/41203513698), con pytest, cobertura, `pip check` y smoke check. |
+| Ejecuté CI para Windows y Ubuntu con Python 3.12 y 3.14. | [Registro histórico de v1.0.0: cuatro combinaciones correctas](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/actions/runs/41203513698), con pytest, cobertura, `pip check` y smoke check. El estado actual de `main` se consulta en su workflow. |
 
 Las cifras de pruebas, cobertura y versiones deben proceder de [VERIFICACION.md](VERIFICACION.md). Indica su entorno y fecha; no conviertas un resultado local en una afirmación de CI, producción o uso real.
 
@@ -57,7 +59,7 @@ Repositorio: [EduardoManzanoAlcaraz/robotelemetry-lite](https://github.com/Eduar
 
 **¿Por qué puede haber más incidencias que lecturas?** Cada lectura evalúa tres reglas independientes. Una condición mantenida genera ocurrencias sucesivas. Deduplicar, reconocer o cerrar un incidente requiere otro modelo que este MVP no implementa.
 
-**¿Qué enseña el caso de los ejes temporales?** Que fechas válidas pueden producir una etiqueta ambigua: los ticks diarios aparecen a medianoche y mostrar solo la hora repite `00:00:00`. Para ventanas de al menos 24 horas se incluye también la fecha. Se comprobaron especificaciones y datos mediante regresiones; la última revisión visual de ese caso sigue pendiente.
+**¿Qué enseña el caso de los ejes temporales?** Que fechas válidas pueden producir una etiqueta ambigua: los ticks diarios aparecen a medianoche y mostrar solo la hora repite `00:00:00`. Para ventanas de al menos 24 horas se incluye también la fecha. Las regresiones comprueban datos y especificaciones, incluidas seis horas y los límites inmediatamente anterior y exacto de 24 horas. La inspección visual en Chrome, los controles y la descarga CSV siguen pendientes de confirmación manual; AppTest no los acredita visualmente.
 
 **¿Qué queda antes de producción?** Autenticación, autorización, observabilidad, migraciones, retención y copias de seguridad; además de probar carga y fallos y decidir el despliegue según requisitos reales. No están implementados ABB ni AWS.
 

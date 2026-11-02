@@ -26,7 +26,8 @@ SECTION_TITLES = (
 
 
 def api_responses(monkeypatch, *, has_data=True, status_code=200,
-                  latest_overrides=None, history_overrides=None, alert_overrides=None):
+                  latest_overrides=None, history_overrides=None, alert_overrides=None,
+                  payload_overrides=None):
     timestamp = datetime.now(UTC).isoformat()
     measurement = {
         "id": 1,
@@ -70,6 +71,7 @@ def api_responses(monkeypatch, *, has_data=True, status_code=200,
         "/telemetry/history": history,
         "/alerts": alerts,
     }
+    payloads.update(payload_overrides or {})
     calls = []
 
     def get(self, url, **kwargs):
@@ -185,6 +187,51 @@ def test_dashboard_invalid_json_is_recoverable(monkeypatch):
     monkeypatch.setattr(httpx.Client, "get", malformed)
     with pytest.raises(DashboardError, match="respuesta no válida"):
         fetch_snapshot("http://test", 60)
+
+
+@pytest.mark.parametrize(("endpoint", "payload"), [
+    ("/health", []),
+    ("/config", []),
+    ("/telemetry/latest", []),
+    ("/telemetry/history", {}),
+    ("/alerts", {}),
+])
+def test_dashboard_rejects_valid_json_with_an_invalid_response_structure(
+    monkeypatch, endpoint, payload
+):
+    calls = api_responses(monkeypatch, payload_overrides={endpoint: payload})
+    with pytest.raises(DashboardError, match="La API ha devuelto una respuesta no válida"):
+        fetch_snapshot("http://test", 60)
+    assert any(path == endpoint for path, _ in calls)
+
+
+def test_dashboard_reports_missing_measurement_fields_without_a_traceback(monkeypatch):
+    api_responses(monkeypatch, payload_overrides={"/telemetry/latest": {"id": 1}})
+    app = AppTest.from_file(str(ENTRYPOINT), default_timeout=20).run()
+    assert not app.exception
+    assert any("API conectada" in message.value for message in app.success)
+    assert [message.value for message in app.error] == [
+        "No se puede mostrar la respuesta de la API: su formato no es válido."
+    ]
+    assert not chart_elements(app)
+    assert not app.get("download_button")
+
+
+@pytest.mark.parametrize("latest_overrides", [
+    {"battery_pct": None},
+    {"timestamp": "2026-11-02T12:00:00"},
+], ids=["invalid-sensor-value", "timestamp-without-timezone"])
+def test_dashboard_reports_invalid_measurement_values_without_a_traceback(
+    monkeypatch, latest_overrides
+):
+    api_responses(monkeypatch, latest_overrides=latest_overrides)
+    app = AppTest.from_file(str(ENTRYPOINT), default_timeout=20).run()
+    assert not app.exception
+    assert [message.value for message in app.error] == [
+        "No se puede mostrar la respuesta de la API: su formato no es válido."
+    ]
+    assert not chart_elements(app)
+    assert not app.get("download_button")
 
 
 def test_dashboard_separates_current_state_history_and_export(monkeypatch):
@@ -335,12 +382,13 @@ def test_dashboard_chart_time_scales_explicitly_use_utc(monkeypatch):
 
 
 @pytest.mark.parametrize("runs", [1, 2])
-@pytest.mark.parametrize("span_days", [0, 4])
+@pytest.mark.parametrize("span_seconds", [59, 21600, 86399, 86400, 345659],
+                         ids=["59-seconds", "6-hours", "just-under-24-hours", "exactly-24-hours", "4-days"])
 def test_chart_axes_distinguish_dates_and_preserve_utc_for_one_or_multiple_runs(
-    monkeypatch, runs, span_days
+    monkeypatch, runs, span_seconds
 ):
     start = datetime(2026, 10, 26, 10, 13, 41, tzinfo=UTC)
-    end = start + timedelta(days=span_days, seconds=59)
+    end = start + timedelta(seconds=span_seconds)
     history = [
         {"timestamp": value.isoformat(), "run_id": f"run-{index % runs}"}
         for index, value in enumerate([start, end])
@@ -355,7 +403,7 @@ def test_chart_axes_distinguish_dates_and_preserve_utc_for_one_or_multiple_runs(
         assert encoding["x"]["scale"]["type"] == "utc"
         # Daily UTC ticks all have the same time; include their date as well.
         assert encoding["x"]["axis"]["format"] == (
-            "%d/%m %H:%M:%S" if span_days else "%H:%M:%S"
+            "%d/%m %H:%M:%S" if span_seconds >= 86400 else "%H:%M:%S"
         )
         plotted = chart_dataframe(chart)
         assert list(plotted["timestamp"]) == [start, end]
