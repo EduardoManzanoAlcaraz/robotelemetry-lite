@@ -1,54 +1,65 @@
-﻿# RoboTelemetry Lite · v1.0.0
+# RoboTelemetry Lite
 
-Telemetría **simulada** de un robot móvil: generación reproducible en Python, persistencia SQLite, consultas REST con FastAPI y visualización con Streamlit. Un proyecto local de portfolio para explicar el recorrido completo de una lectura, desde su generación hasta su gráfica y sus alertas.
+Proyecto personal de portfolio universitario para **simular y monitorizar la telemetría de un robot móvil**. Genera lecturas en Python, las guarda en SQLite, las consulta mediante una API FastAPI y las muestra en un dashboard Streamlit.
 
-**Los sensores son simulados. No existe conexión con un robot físico, ABB RobotStudio ni AWS.** La aplicación no necesita cuentas externas ni servicios de pago.
+**Los sensores y los datos son simulados.** No hay conexión con un robot físico ni integración actual con ABB RobotStudio, FANUC ROBOGUIDE o AWS. Todo funciona en local, sin cuentas externas ni servicios de pago.
 
-**Documentación de `main`.** La [release v1.0.0](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/releases/tag/v1.0.0) conserva su código y registro original de 161 pruebas y 94 % de cobertura. `main` amplía la suite a **187 pruebas**, con **99,30 % de cobertura combinada** en Windows con Python 3.14.7; no modifica el código de producción ni mueve aquel tag.
+## Funcionalidades
 
-![Estado actual, métricas y alertas de RoboTelemetry Lite](docs/assets/dashboard-estado.jpg)
+- **Simulación:** batería, temperatura, velocidad y distancia al obstáculo más cercano, con semilla reproducible y cinco escenarios: normal, low_battery, overheating, obstacle y demo.
+- **Alertas:** detección de batería baja, temperatura elevada y obstáculos próximos. Cada incumplimiento se registra por lectura; no se gestionan incidentes abiertos o cerrados.
+- **Histórico:** almacenamiento de mediciones y alertas en SQLite, con consultas REST, paginación y filtros.
+- **Gráficas:** dashboard con estado actual, alertas, histórico y cuatro gráficas temporales en UTC.
+- **CSV:** exportación de las mediciones de la ventana seleccionada en el dashboard, no de toda la base de datos.
 
-Captura real del frontend tomada el 26 de octubre de 2026. [Ver las incidencias y la exportación](docs/assets/dashboard-historico.jpg).
+## Tecnologías
 
-## Qué incluye
+| Tecnología | Uso |
+| --- | --- |
+| Python 3.12+ | Simulación y lógica del proyecto |
+| FastAPI | API REST de consulta |
+| SQLite | Persistencia local |
+| Streamlit | Dashboard y visualización |
+| Pydantic | Modelos y validación de datos |
+| Pytest | Pruebas automatizadas |
 
-- Cuatro magnitudes coherentes: batería, temperatura, velocidad y distancia al obstáculo más próximo.
-- Semilla reproducible y cinco escenarios, incluida una demostración con anomalías.
-- Mediciones y alertas guardadas juntas en una transacción SQLite.
-- API de consulta con validación, paginación, filtros y documentación OpenAPI.
-- Dashboard con estado actual, alertas de la última lectura, histórico, cuatro gráficas UTC, tabla y CSV.
-- Pruebas unitarias, de API e interfaz, y comprobación completa con procesos locales reales.
+Las dependencias completas están en [pyproject.toml](pyproject.toml).
 
-## Arquitectura y tecnologías
+## Arquitectura
 
 ```mermaid
 flowchart LR
-    S[Simulador Python] --> M[Modelos Pydantic]
-    M --> U[Servicio de registro]
-    U --> A[Reglas de alerta]
-    U --> DB[(SQLite)]
-    DB --> API[FastAPI]
-    API --> UI[Streamlit]
+    A[Simulador Python] --> B[Servicio y reglas de alerta]
+    B --> C[(SQLite)]
+    C --> D[API FastAPI]
+    D --> E[Dashboard Streamlit]
 ```
 
-El simulador escribe en SQLite mediante el servicio. La API consulta esa misma base. El dashboard consume únicamente la API por HTTP: refrescar o cerrar la interfaz no inicia una simulación ni elimina datos. Los tres procesos se arrancan por separado.
+El simulador escribe las lecturas y sus alertas en SQLite. FastAPI consulta esa base y Streamlit obtiene los datos a través de HTTP. **Simulador, API y dashboard son procesos independientes**: cerrar la interfaz no detiene la simulación ni borra el histórico.
 
-| Tecnología | Función |
-| --- | --- |
-| Python 3.12+ | Generación, reglas, coordinación y herramientas de consola. |
-| Pydantic | Contratos, rangos, números finitos y fechas con zona horaria. |
-| SQLite, biblioteca estándar | Persistencia, claves foráneas, restricciones, índices y transacciones. |
-| FastAPI y Uvicorn | API REST y servidor local. |
-| Streamlit y pandas | Interfaz, datos históricos y exportación. |
-| httpx | Cliente HTTP del dashboard y comprobaciones de integración. |
-| pytest y pytest-cov | Pruebas y cobertura de sentencias y ramas. |
-| GitHub Actions | Workflow para Windows y Ubuntu con Python 3.12 y 3.14. |
+## Capturas
 
-Las dependencias y sus rangos están en [pyproject.toml](pyproject.toml). El extra `dev` incluye `httpx2`, usado por el cliente de pruebas de Starlette; el cliente de la aplicación usa `httpx`. No hay un bloqueo de todas las dependencias transitivas.
+Capturas reales del dashboard, obtenidas con **datos simulados** el 26 de octubre de 2026:
 
-## Instalación en Windows PowerShell
+**Estado y alertas**
 
-Necesitas Python **3.12 o superior** con el lanzador `py`, y conexión a Internet para instalar dependencias. SQLite viene incluido en Python. Abre la carpeta del proyecto en VS Code y utiliza una terminal situada en su raíz, donde se encuentra este README:
+![Estado actual, métricas y alertas](docs/assets/dashboard-estado.jpg)
+
+**Histórico e incidencias**
+
+![Histórico e incidencias del dashboard](docs/assets/dashboard-historico.jpg)
+
+**Gráficas**
+
+![Cuatro gráficas de telemetría](docs/assets/dashboard-graficas.jpg)
+
+Las capturas son anteriores al ajuste del formato de ejes para ventanas de varios días. Ese comportamiento tiene pruebas automatizadas, pero su **revisión visual final en navegador sigue pendiente**, al igual que la confirmación visual de controles y descarga CSV.
+
+## Instalación y ejecución
+
+En **Windows PowerShell**, con Python 3.12 o superior y conexión a Internet para instalar dependencias. Ejecuta los comandos desde la **raíz del repositorio**. SQLite ya viene incluido en Python y no hace falta activar el entorno virtual ni cambiar ExecutionPolicy.
+
+**1. Instalar**
 
 ```powershell
 py --list
@@ -59,23 +70,17 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip check
 ```
 
-Si tienes Python 3.14 en lugar de 3.12, sustituye únicamente la creación del entorno por `py -3.14 -m venv .venv`. El resto de comandos es idéntico. No necesitas activar el entorno ni cambiar `ExecutionPolicy`.
+Si tienes Python 3.14 en vez de 3.12, usa **py -3.14 -m venv .venv** en la segunda línea; los demás comandos no cambian.
 
-## Primera demostración, sin tocar otros datos
-
-Desde la raíz del proyecto:
+**2. Crear datos de demostración**
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\prepare_demo.py --output data/demo-v1.sqlite3 --seed 42
 ```
 
-Este comando crea **un archivo nuevo** con 140 lecturas: 60 del escenario `normal` y 80 de `demo`, en dos ejecuciones distintas. Con la semilla 42 y los umbrales predeterminados produce 34 incidencias: 17 de temperatura, 5 de batería y 12 de obstáculos. Los valores se repiten; las fechas UTC y los identificadores de ejecución cambian.
+Genera **140 lecturas y 34 alertas** con los umbrales predeterminados (20 % de batería, 65 °C y 0,5 m). **La herramienta exige una base nueva: no sobrescribe archivos existentes.** Si data/demo-v1.sqlite3 ya existe, elige otro nombre de archivo y usa esa misma ruta en las terminales siguientes. La demo no toma su ruta de ROBO_DB_PATH.
 
-La herramienta exige `--output` y rechaza archivos ya existentes, incluidos los auxiliares SQLite. No borra, reutiliza ni sobrescribe bases. Si `data/demo-v1.sqlite3` existe, elige otro nombre y utiliza ese mismo nombre en las terminales siguientes. La demo usa explícitamente los umbrales 20 %, 65 °C y 0,5 m; no lee `ROBO_DB_PATH` ni umbrales del entorno.
-
-### Terminal 1: API
-
-Abre una terminal PowerShell en la raíz del proyecto:
+**3. Arrancar la API — terminal 1**
 
 ```powershell
 $env:ROBO_DB_PATH = 'data/demo-v1.sqlite3'
@@ -85,34 +90,18 @@ $env:ROBO_OBSTACLE_NEAR_M = '0.5'
 .\.venv\Scripts\python.exe -m uvicorn robotelemetry.api:app --host 127.0.0.1 --port 8000
 ```
 
-La documentación interactiva está en [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs). Deja esta terminal abierta.
+Deja el proceso abierto. Documentación de la API: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
-### Terminal 2: dashboard
-
-En otra terminal, también desde la raíz:
+**4. Abrir el dashboard — terminal 2**
 
 ```powershell
 $env:ROBO_API_URL = 'http://127.0.0.1:8000'
 .\.venv\Scripts\python.exe -m streamlit run dashboard.py --server.address 127.0.0.1 --server.port 8501 --browser.gatherUsageStats false
 ```
 
-Abre [http://127.0.0.1:8501](http://127.0.0.1:8501). Con solo los datos de la demo verás 140 lecturas y 34 incidencias. El aviso de antigüedad es normal: la generación del lote ya terminó. La pausa de la actualización afecta únicamente a la vista.
+Abre [http://127.0.0.1:8501](http://127.0.0.1:8501). La demo ya permite consultar el histórico; si aparece un aviso de datos antiguos es porque el lote simulado terminó.
 
-![Cuatro gráficas del dashboard con series por ejecución](docs/assets/dashboard-graficas.jpg)
-
-Captura real del 26 de octubre de 2026, anterior al ajuste del eje de varios días; no valida ese nuevo formato. Las ventanas de al menos 24 horas incluyen fecha y hora UTC para distinguir los ticks diarios; las ventanas cortas muestran la hora UTC. La comprobación automatizada de esa distinción está documentada en [VERIFICACION.md](docs/VERIFICACION.md); la revisión visual final de ventanas de varios días sigue pendiente.
-
-### Terminal 3: simulación en directo
-
-Puedes comprobar primero los recuentos iniciales desde una tercera terminal:
-
-```powershell
-Invoke-RestMethod 'http://127.0.0.1:8000/health'
-Invoke-RestMethod 'http://127.0.0.1:8000/config'
-Invoke-RestMethod 'http://127.0.0.1:8000/telemetry/latest'
-```
-
-Después, desde esa misma terminal situada en la raíz, añade una ejecución normal en directo:
+**5. Añadir telemetría en directo — terminal 3 (opcional)**
 
 ```powershell
 $env:ROBO_DB_PATH = 'data/demo-v1.sqlite3'
@@ -122,83 +111,17 @@ $env:ROBO_OBSTACLE_NEAR_M = '0.5'
 .\.venv\Scripts\python.exe -m robotelemetry.simulator --seed 42 --scenario normal
 ```
 
-Se añade una lectura por segundo hasta `Ctrl+C`. La última lectura normal puede no tener alertas actuales aunque el histórico conserve las 34 incidencias de la demo. Para ver anomalías en directo, detén el simulador y repite el comando con `--scenario demo`.
+Se añade una lectura aproximadamente cada segundo hasta pulsar **Ctrl+C**. Para simular anomalías, detén ese proceso y repite el comando con **--scenario demo**. La pausa del dashboard solo detiene el refresco de la vista; no detiene el simulador.
 
-Detén cada proceso con `Ctrl+C` en su terminal. Reiniciar la API o el dashboard conserva las mediciones. Reiniciar el simulador crea otra ejecución y añade lecturas; no reanuda la ejecución anterior. Si un puerto ya está ocupado, detén tu proceso anterior o utiliza puertos libres, ajustando `ROBO_API_URL` al puerto de la API.
+**Importante:** las variables de entorno de PowerShell no se comparten automáticamente entre terminales. API y simulador deben usar **la misma base y los mismos umbrales**. Los umbrales nuevos no recalculan alertas anteriores. Los procesos se detienen con **Ctrl+C** y los datos permanecen en SQLite. Si cambias el puerto de la API, actualiza también ROBO_API_URL. Los archivos .env no se cargan automáticamente.
 
-El recorrido ampliado está en [docs/DEMO.md](docs/DEMO.md).
+Esta aplicación está pensada para **localhost**, sin autenticación ni copias de seguridad o retención automáticas. No debe exponerse públicamente sin medidas adicionales ni considerarse un sistema de producción o control de robots.
 
-## Simulación, fechas y alertas
+Guía ampliada: [docs/DEMO.md](docs/DEMO.md).
 
-| Escenario | Comportamiento |
-| --- | --- |
-| `normal` | Evolución habitual de las cuatro magnitudes. |
-| `low_battery` | Descenso acelerado de batería. |
-| `overheating` | Aumento de temperatura. |
-| `obstacle` | Aproximación a un obstáculo y reducción de velocidad. |
-| `demo` | Ciclo de condiciones normales y anomalías. |
+## Pruebas
 
-```powershell
-# Veinte lecturas, intervalo real predeterminado de un segundo.
-.\.venv\Scripts\python.exe -m robotelemetry.simulator --seed 42 --scenario obstacle --samples 20
-
-# Adquisición acelerada con hora UTC real, sin fechas futuras artificiales.
-.\.venv\Scripts\python.exe -m robotelemetry.simulator --seed 42 --scenario normal --samples 20 --interval 0.1
-
-# Historial sintético finito, sin esperas entre lecturas.
-.\.venv\Scripts\python.exe -m robotelemetry.simulator --seed 42 --scenario demo --samples 80 --interval 0
-
-.\.venv\Scripts\python.exe -m robotelemetry.simulator --help
-```
-
-Estos comandos escriben en la base que indique `ROBO_DB_PATH` de esa terminal. Si no está definida, utilizan `data/robotelemetry.sqlite3`.
-
-La semilla y el escenario reproducen los valores. Cada ejecución tiene otro `run_id`; `sequence` comienza en 1. El modelo avanza un segundo lógico por paso: `t_sim = sequence - 1`. Con intervalo mayor que cero, el `timestamp` es la adquisición UTC real; el intervalo controla la espera, no el paso lógico. El ritmo depende del sistema y no constituye una garantía de tiempo real.
-
-Con `--interval 0` es obligatorio indicar `--samples`: se guarda un historial sintético de pasos de un segundo que termina al inicio de la ejecución. Sus fechas representan tiempo simulado. El dashboard normaliza fechas ISO 8601 de distintas precisiones y zonas a UTC, y avisa de datos antiguos o futuros. No reescribe fechas presentes en bases anteriores.
-
-Una alerta es una **ocurrencia por lectura y regla incumplida**: batería ≤ umbral, temperatura ≥ umbral u obstáculo ≤ umbral. Pueden generarse hasta tres por lectura. Una condición mantenida genera nuevas ocurrencias en cada medición; no hay apertura, cierre, reconocimiento ni deduplicación de incidentes. El histórico puede acumular más incidencias que lecturas sin que exista una inconsistencia.
-
-## Configuración y persistencia
-
-| Variable | Valor predeterminado | Significado |
-| --- | --- | --- |
-| `ROBO_DB_PATH` | `data/robotelemetry.sqlite3` | Archivo SQLite. Las rutas relativas se anclan a la raíz del proyecto. |
-| `ROBO_BATTERY_LOW_PCT` | `20` | Alerta de batería ≤ porcentaje; rango 0–100. |
-| `ROBO_TEMPERATURE_HIGH_C` | `65` | Alerta de temperatura ≥ °C; rango −20–150. |
-| `ROBO_OBSTACLE_NEAR_M` | `0.5` | Alerta de distancia ≤ metros; rango 0–20. |
-| `ROBO_API_URL` | `http://127.0.0.1:8000` | API consultada por Streamlit. |
-
-Las variables se leen al arrancar cada proceso. Una asignación en PowerShell no se propaga a otras terminales ya abiertas. Configura **la misma base y umbrales en API y simulador**. Al cambiarlos, reinicia ambos: los nuevos umbrales afectan a futuras lecturas y no recalculan las alertas guardadas. Los archivos `.env` no se cargan automáticamente.
-
-SQLite crea el archivo si no existe y conserva los datos al reiniciar. Cada medición guarda ejecución, secuencia, semilla, escenario, fecha y magnitudes. Las alertas referencian su medición. El almacenamiento utiliza SQL parametrizado, restricciones, claves foráneas, índices y modo WAL; medición y alertas se confirman juntas o se revierten juntas.
-
-La interfaz consulta una ventana de 60 a 1000 lecturas y las 30 incidencias más recientes. La tabla y el CSV contienen **la ventana de mediciones visible**, no toda la base. Las gráficas separan las ejecuciones mediante colores y leyenda.
-
-## API REST
-
-| Método y ruta | Respuesta |
-| --- | --- |
-| `GET /health` | Estado de consulta de SQLite y contadores. No comprueba que el simulador esté activo. |
-| `GET /config` | Umbrales cargados por la API. |
-| `GET /telemetry/latest` | Última lectura por fecha e ID; `404` si no hay datos. |
-| `GET /telemetry/history` | Historial con `limit`, `offset`, `since` y `until`. |
-| `GET /alerts` | Incidencias con `limit`, `offset` y `kind`. |
-| `GET /docs` | Documentación interactiva OpenAPI. |
-
-El historial se ordena por fecha e identificador descendentes. Los límites temporales son inclusivos. `limit` admite 1–1000 y `offset` 0–9223372036854775807. `since` y `until` requieren zona horaria, deben poder representarse en UTC entre los años 1 y 9999 y cumplir `since ≤ until`. Los parámetros inválidos reciben `422`, incluidos offsets excesivos y fechas extremas cuyo desplazamiento UTC desbordaría el rango. Los errores SQLite reciben `503` con un mensaje público controlado.
-
-```powershell
-Invoke-RestMethod 'http://127.0.0.1:8000/telemetry/history?limit=10&offset=0'
-Invoke-RestMethod 'http://127.0.0.1:8000/alerts?kind=near_obstacle&limit=10'
-
-# Ejemplo de filtro: ajusta las fechas al historial que quieras consultar.
-Invoke-RestMethod 'http://127.0.0.1:8000/telemetry/history?since=2026-10-31T00:00:00Z&until=2026-10-31T23:59:59Z'
-```
-
-`kind` admite `low_battery`, `high_temperature` y `near_obstacle`. La API es de consulta; la escritura corresponde al proceso simulador a través del servicio.
-
-## Pruebas y verificación
+Desde la raíz, con el entorno instalado:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest --cov=robotelemetry --cov-report=term-missing
@@ -206,47 +129,16 @@ Invoke-RestMethod 'http://127.0.0.1:8000/telemetry/history?since=2026-10-31T00:0
 .\.venv\Scripts\python.exe -m pip check
 ```
 
-La suite prueba simulador, validación, reglas, persistencia, endpoints, dashboard y protección de datos de la herramienta de demo. Incluye regresiones de paginación, adquisición acelerada, fechas ISO mixtas, normalización de fechas extremas y ejes UTC en ventanas cortas y de varios días. También comprueba errores reales de la CLI y del almacenamiento, conservación de lecturas tras una interrupción, cierre de conexiones y respuestas HTTP con datos inválidos. Las pruebas utilizan bases temporales y dobles HTTP donde procede.
+**Estado actual de main:** 187 pruebas aprobadas y **99,30 % de cobertura combinada local** (Windows, Python 3.14.7, 2 de noviembre de 2026). Pytest muestra el resultado redondeado como 99 %. La [ejecución de GitHub Actions de main](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/actions/runs/41474386312) terminó correctamente con **187 pruebas en cada uno de cuatro entornos**: Windows y Ubuntu, con Python 3.12 y 3.14, además de pip check y el smoke check.
 
-**Verificación local de `main`, 2 de noviembre de 2026:** 187 pruebas correctas en Python 3.14.7; 485/487 sentencias (**99,59 %**) y 84/86 ramas (**97,67 %**), con **99,30 % combinado**, mostrado como 99 % por pytest-cov. No se añadieron exclusiones ni se cambió el denominador para elevar la cifra. Detalle, compatibilidad con Python 3.12 y límites en [VERIFICACION.md](docs/VERIFICACION.md).
+**Release histórica [v1.0.0](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/releases/tag/v1.0.0):** 161 pruebas y 94 % de cobertura. Esa release y su tag permanecen intactos; la ampliación de pruebas está en main. Las cifras locales no deben confundirse con los resultados de CI.
 
-`smoke_check.py` utiliza SQLite temporal y puertos libres: ejecuta la CLI, arranca FastAPI y Streamlit, consulta HTTP, reinicia la API para comprobar persistencia y ejecuta el dashboard con AppTest contra la API real. Comprueba cuatro métricas y cuatro gráficas; después detiene sus propios procesos. El HTTP de Streamlit verifica el arranque del servidor; AppTest verifica la ejecución de la interfaz. **No sustituye una inspección visual de navegador.**
+El smoke check verifica procesos, API, persistencia y ejecución del dashboard con AppTest, **no una inspección visual del navegador**. Detalles y limitaciones: [docs/VERIFICACION.md](docs/VERIFICACION.md). También puedes consultar el [workflow](.github/workflows/tests.yml), el [historial de cambios](CHANGELOG.md) y la [presentación para portfolio](docs/PORTFOLIO.md).
 
-Los resultados realmente ejecutados, la cobertura y el estado de la instalación limpia están en [docs/VERIFICACION.md](docs/VERIFICACION.md). Ese documento distingue evidencia local, comprobación visual anterior y revisiones pendientes; no atribuye resultados locales a GitHub Actions.
+## Posibles mejoras
 
-El [workflow](.github/workflows/tests.yml) instala el proyecto, ejecuta `pip check`, pytest con cobertura y el smoke check en Windows y Ubuntu, con Python 3.12 y 3.14. Consulta las [ejecuciones actuales de `main`](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/actions/workflows/tests.yml?query=branch%3Amain) para su estado remoto; los resultados locales no se atribuyen a CI. Como registro histórico, la [primera ejecución real](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/actions/runs/41203513698) completó las cuatro combinaciones con 161 pruebas y 94 % de cobertura antes de ampliar la suite.
+- Integrar un simulador industrial como **ABB RobotStudio** o **FANUC ROBOGUIDE** para sustituir las lecturas sintéticas por datos procedentes de un entorno de simulación robótica.
+- Explorar **AWS** para la ingestión, el almacenamiento o la visualización en la nube.
+- Añadir autenticación, políticas de retención y copias de seguridad antes de plantear un despliegue público.
 
-## Organización del código
-
-| Archivo o directorio | Responsabilidad |
-| --- | --- |
-| `src/robotelemetry/config.py` | Rutas, configuración de entorno y umbrales. |
-| `models.py` | Contratos Pydantic de mediciones, escenarios y alertas. |
-| `simulator.py` | Generador con estado y semilla; reloj lógico y ejecución CLI. |
-| `alerts.py` | Reglas puras de detección. |
-| `service.py` | Coordinar evaluación y registro de cada lectura. |
-| `storage.py` | Tablas, transacciones y consultas parametrizadas SQLite. |
-| `api.py` | Endpoints de consulta, validación HTTP y errores públicos. |
-| `dashboard.py` | Cliente HTTP y presentación Streamlit. |
-| `dashboard_styles.py` | Estilos del frontend sin recursos externos. |
-| `__init__.py` | Versión del paquete. |
-| `dashboard.py` en la raíz | Entrada de Streamlit. |
-| `scripts/prepare_demo.py` | Crear una demostración en una base nueva, sin sobrescribir. |
-| `scripts/smoke_check.py` | Comprobar integración con procesos y HTTP reales. |
-| `tests/` | Pruebas aisladas del histórico local. |
-| `docs/` | Demo, resultados, capturas y presentación del portfolio. |
-
-## Limitaciones y publicación
-
-- Es un modelo didáctico, sin calibración física ni control de un robot. Una ejecución larga puede agotar la batería; no existe recarga automática.
-- La aplicación está diseñada para localhost, sin autenticación ni autorización. No se debe exponer como servicio público sin trabajo adicional.
-- SQLite es adecuado para el MVP local. No se ha validado carga sostenida, ingestión distribuida ni tolerancia a fallos de producción.
-- No hay retención, migraciones ni copias de seguridad automáticas; el histórico crece mientras se genera telemetría.
-- `/health` no acredita la salud del productor. La interfaz muestra la antigüedad de las lecturas.
-- Las consultas HTTP que componen cada refresco no comparten una transacción de snapshot; con generación en curso puede haber pequeñas diferencias temporales entre contadores, última lectura e histórico.
-- La inspección visual en Chrome de ejes de horas y días, controles y descarga CSV sigue pendiente de confirmación manual del propietario. AppTest y Arrow comprueban datos y especificaciones; el CSV generado se valida por su contenido, sin acreditar la descarga ni el dibujo en el navegador.
-- No se ha realizado una auditoría específica de vulnerabilidades de dependencias. Las versiones comprobadas localmente y en GitHub Actions constan en el informe de verificación.
-
-`.gitignore` excluye bases SQLite y auxiliares, `data/`, entornos virtuales, resultados de prueba, temporales y configuración sensible habitual. No es un detector de secretos: revisa siempre los archivos que vayas a añadir. Las capturas incluidas proceden de datos simulados de demostración; **no se distribuyen bases de datos ni históricos locales**.
-
-El código de la versión **1.0.0** está publicado en [EduardoManzanoAlcaraz/robotelemetry-lite](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite), con `main` como rama principal. El historial de publicaciones se consulta en [Releases](https://github.com/EduardoManzanoAlcaraz/robotelemetry-lite/releases). Cambios en [CHANGELOG.md](CHANGELOG.md). Para presentar el proyecto con afirmaciones verificables, consulta [docs/PORTFOLIO.md](docs/PORTFOLIO.md).
+**Estas son ideas futuras, no funcionalidades implementadas.**
