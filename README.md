@@ -142,3 +142,11 @@ El smoke check verifica procesos, API, persistencia y ejecución del dashboard c
 - Añadir autenticación, políticas de retención y copias de seguridad antes de plantear un despliegue público.
 
 **Estas son ideas futuras, no funcionalidades implementadas.**
+
+## Contexto para continuar el proyecto
+
+- [Instrucciones para Codex, Claude y otras IA](AGENTS.md).
+- [Mapa técnico y decisiones actuales](ARCHITECTURE.md).
+- [Estado contrastado, límites y siguientes pasos](PROJECT_STATUS.md).
+
+La revisión del 19 de noviembre de 2026 repitió instalación aislada, `pip check`, las **187 pruebas** (cobertura mostrada: **99 %**) y el smoke check local. Los resultados históricos y sus entornos se conservan arriba y en `docs/VERIFICACION.md`; esta revisión no vuelve a acreditar CI ni la inspección visual pendiente. **RoboFleet Cloud no está implementado en este repositorio**: AWS continúa como posible evolución.
