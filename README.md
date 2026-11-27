@@ -135,6 +135,10 @@ Desde la raíz, con el entorno instalado:
 
 El smoke check verifica procesos, API, persistencia y ejecución del dashboard con AppTest, **no una inspección visual del navegador**. Detalles y limitaciones: [docs/VERIFICACION.md](docs/VERIFICACION.md). También puedes consultar el [workflow](.github/workflows/tests.yml), el [historial de cambios](CHANGELOG.md) y la [presentación para portfolio](docs/PORTFOLIO.md).
 
+## Licencia
+
+Proyecto de código abierto bajo licencia [MIT](LICENSE). Puedes usarlo, modificarlo y distribuirlo conservando el aviso de copyright.
+
 ## Posibles mejoras
 
 - Integrar un simulador industrial como **ABB RobotStudio** o **FANUC ROBOGUIDE** para sustituir las lecturas sintéticas por datos procedentes de un entorno de simulación robótica.
